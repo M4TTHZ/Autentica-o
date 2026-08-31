@@ -3,6 +3,7 @@ package com.matheusramalho.Autenticacao.dto;
 
 import com.matheusramalho.Autenticacao.model.Papel;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import org.springframework.security.core.parameters.P;
 
 /**
@@ -19,7 +20,7 @@ public class CadastroRequestDTO {
     @NotBlank(message = "sem senha nao da")
     private String senha;
 
-    @NotBlank(message = "bata tua funca ai")
+    @NotNull(message = "papel e obrigatorio")
     private Papel papel;
 
     public CadastroRequestDTO(){}

@@ -32,9 +32,9 @@ public class ClienteService {
         }
 
         Cliente cliente = new Cliente();
-        cliente.getNome();
-        cliente.getCpf();
-        cliente.getCep();
+        cliente.setNome(dto.getNome());
+        cliente.setCpf(dto.getCpf());
+        cliente.setCep(dto.getCep());
 
         return ClienteResponseDTO.fromEntity(clienteRepository.save(cliente));
     }

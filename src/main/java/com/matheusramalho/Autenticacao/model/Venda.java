@@ -21,15 +21,15 @@ public class Venda {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(nullable = false)
+    @ManyToOne(optional = false)
     @JoinColumn(name = "produto_id")
     private Produto produto;
 
-    @Column(nullable = false)
+    @ManyToOne(optional = false)
     @JoinColumn(name = "cliente_id")
     private Cliente cliente;
 
-    @Column(nullable = false)
+    @ManyToOne(optional = false)
     @JoinColumn(name = "vendedor_id")
     private Usuario vendedor;
 
@@ -42,5 +42,4 @@ public class Venda {
 
     @Column(nullable = false)
     private LocalDateTime dataHora = LocalDateTime.now();
-
 }

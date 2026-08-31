@@ -36,15 +36,15 @@ public class UsuarioResponseDTO {
         return id;
     }
 
-    private String getUsername(){
+    public String getUsername(){
         return username;
     }
 
-    private Papel getPapel(){
+    public Papel getPapel(){
         return papel;
     }
 
-    private boolean isMfaAtivo(){
+    public boolean isMfaAtivo(){
         return mfaAtivo;
     }
 
