@@ -33,7 +33,7 @@ public class MfaService {
     private final CodeVerifier codeVerifier =
             new DefaultCodeVerifier(new DefaultCodeGenerator(HashingAlgorithm.SHA1), timeProvider);
 
-    public String gerarNovoSecret(){
+    public String gerarNovoSecret() {
         return secretGenerator.generate();
     }
 
@@ -41,7 +41,7 @@ public class MfaService {
         QrData data = new QrData.Builder()
                 .label(username)
                 .secret(secret)
-                .issuer("BatataAuth")
+                .issuer("AdminShop")
                 .algorithm(HashingAlgorithm.SHA1)
                 .digits(6)
                 .period(30)
