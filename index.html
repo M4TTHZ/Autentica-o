@@ -1,0 +1,613 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AdminShop</title>
+<style>
+  :root {
+    --bg: #0f1115;
+    --panel: #161922;
+    --panel-2: #1d212c;
+    --border: #2a2f3d;
+    --text: #e6e8ed;
+    --text-dim: #8b93a7;
+    --accent: #4f8cff;
+    --ok: #3ecf8e;
+    --err: #ef5c5c;
+    --warn: #e8b339;
+    --radius: 8px;
+    font-family: -apple-system, "Segoe UI", Inter, Roboto, sans-serif;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--text); min-height: 100vh; }
+
+  header {
+    padding: 16px 24px;
+    border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; justify-content: space-between;
+    position: sticky; top: 0; background: var(--bg); z-index: 10;
+  }
+  header .brand { font-weight: 700; letter-spacing: .3px; }
+  header .brand span { color: var(--accent); }
+  #sessaoInfo { font-size: 13px; color: var(--text-dim); display: flex; align-items: center; gap: 10px; }
+  #sessaoInfo b { color: var(--text); }
+
+  nav#tabs {
+    display: flex; gap: 4px; padding: 10px 24px; border-bottom: 1px solid var(--border);
+    overflow-x: auto;
+  }
+  nav#tabs button {
+    background: transparent; border: none; color: var(--text-dim);
+    padding: 7px 12px; border-radius: 6px; font-size: 13px; cursor: pointer; white-space: nowrap;
+  }
+  nav#tabs button.active { background: var(--panel-2); color: var(--text); }
+  nav#tabs button:hover { color: var(--text); }
+
+  main { max-width: 900px; margin: 0 auto; padding: 28px 20px 80px; }
+  .tab-panel { display: none; }
+  .tab-panel.active { display: block; }
+
+  .card {
+    background: var(--panel); border: 1px solid var(--border); border-radius: var(--radius);
+    padding: 20px; margin-bottom: 18px;
+  }
+  .card h2 { margin: 0 0 4px; font-size: 15px; }
+  .card p.sub { margin: 0 0 14px; font-size: 12px; color: var(--text-dim); }
+
+  label { display: block; font-size: 12px; color: var(--text-dim); margin: 10px 0 4px; }
+  input, select {
+    width: 100%; padding: 8px 10px; background: var(--panel-2);
+    border: 1px solid var(--border); border-radius: 6px; color: var(--text); font-size: 14px;
+  }
+  input:focus, select:focus { outline: none; border-color: var(--accent); }
+
+  button.primary {
+    margin-top: 14px; padding: 8px 16px; border-radius: 6px; border: none;
+    background: var(--accent); color: #fff; font-size: 13px; font-weight: 600; cursor: pointer;
+  }
+  button.primary:hover { filter: brightness(1.08); }
+  button.secondary {
+    margin-top: 14px; padding: 8px 16px; border-radius: 6px; border: 1px solid var(--border);
+    background: transparent; color: var(--text); font-size: 13px; cursor: pointer;
+  }
+  button.small { padding: 5px 10px; font-size: 12px; margin-top: 0; }
+
+  .msg { margin-top: 10px; padding: 8px 11px; border-radius: 6px; font-size: 12.5px; display: none; }
+  .msg.show { display: block; }
+  .msg.ok { background: rgba(62,207,142,.12); color: var(--ok); border: 1px solid rgba(62,207,142,.3); }
+  .msg.err { background: rgba(239,92,92,.12); color: var(--err); border: 1px solid rgba(239,92,92,.3); }
+
+  .badge { display: inline-block; font-size: 10.5px; font-weight: 700; padding: 2px 8px; border-radius: 20px; letter-spacing: .4px; }
+  .badge.ADMIN { background: rgba(232,179,57,.15); color: var(--warn); }
+  .badge.FINANCEIRO { background: rgba(79,140,255,.15); color: var(--accent); }
+  .badge.VENDEDOR { background: rgba(62,207,142,.15); color: var(--ok); }
+  .badge.PENDENTE { background: rgba(232,179,57,.15); color: var(--warn); }
+  .badge.ENVIADO { background: rgba(79,140,255,.15); color: var(--accent); }
+  .badge.ENTREGUE { background: rgba(62,207,142,.15); color: var(--ok); }
+  .badge.CANCELADO { background: rgba(239,92,92,.15); color: var(--err); }
+
+  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; }
+
+  table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 13px; }
+  th, td { text-align: left; padding: 7px 6px; border-bottom: 1px solid var(--border); }
+  th { color: var(--text-dim); font-weight: 600; font-size: 11.5px; text-transform: uppercase; letter-spacing: .3px; }
+  td select { padding: 4px 6px; font-size: 12px; }
+
+  .empty { color: var(--text-dim); font-size: 12.5px; padding: 10px 0; }
+
+  #loginCard { max-width: 380px; margin: 70px auto 0; }
+  #appShell { display: none; }
+
+  .qr-box { display: flex; gap: 16px; align-items: center; margin-top: 12px; flex-wrap: wrap; }
+  .qr-box img { border-radius: 6px; background: #fff; padding: 6px; }
+
+  .locked-hint { font-size: 12px; color: var(--text-dim); }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="brand">Admin<span>Shop</span></div>
+  <div id="sessaoInfo"></div>
+</header>
+
+<nav id="tabs"></nav>
+
+<main>
+
+  <section id="loginCard" class="card">
+    <h2>Entrar</h2>
+    <p class="sub">Acesso restrito à equipe (vendedor, financeiro, admin)</p>
+
+    <label>Usuário</label>
+    <input id="loginUsername" autocomplete="username">
+
+    <label>Senha</label>
+    <input id="loginSenha" type="password" autocomplete="current-password">
+
+    <div id="mfaField" style="display:none">
+      <label>Código MFA (app autenticador)</label>
+      <input id="loginTotp" maxlength="6" placeholder="000000">
+    </div>
+
+    <button class="primary" onclick="fazerLogin()">Entrar</button>
+    <div id="loginMsg" class="msg"></div>
+  </section>
+
+  <div id="appShell">
+
+    <div class="tab-panel" data-tab="inicio">
+      <div class="card">
+        <h2>Meu perfil</h2>
+        <p class="sub">Dados da conta autenticada (GET /me)</p>
+        <div id="meuPerfil" class="empty">Carregando…</div>
+      </div>
+    </div>
+
+    <div class="tab-panel" data-tab="clientes">
+      <div class="card">
+        <h2>Cadastrar cliente</h2>
+        <p class="sub">Disponível para vendedor, financeiro e admin</p>
+        <div class="grid-2">
+          <div><label>Nome</label><input id="clienteNome"></div>
+          <div><label>CPF</label><input id="clienteCpf" placeholder="000.000.000-00"></div>
+        </div>
+        <label>CEP</label>
+        <input id="clienteCep" placeholder="00000-000">
+        <button class="primary" onclick="criarCliente()">Salvar cliente</button>
+        <div id="clienteMsg" class="msg"></div>
+      </div>
+      <div class="card">
+        <h2>Clientes cadastrados</h2>
+        <table id="tabelaClientes">
+          <thead><tr><th>ID</th><th>Nome</th><th>CPF</th><th>CEP</th></tr></thead>
+          <tbody></tbody>
+        </table>
+        <div id="clientesVazio" class="empty" style="display:none">Nenhum cliente cadastrado ainda.</div>
+      </div>
+    </div>
+
+    <div class="tab-panel" data-tab="produtos">
+      <div class="card" id="cardCriarProduto">
+        <h2>Cadastrar produto</h2>
+        <p class="sub">Apenas admin</p>
+        <div class="grid-3">
+          <div><label>Nome</label><input id="produtoNome"></div>
+          <div><label>Preço de venda</label><input id="produtoPreco" type="number" step="0.01"></div>
+          <div><label>Custo</label><input id="produtoCusto" type="number" step="0.01"></div>
+        </div>
+        <button class="primary" onclick="criarProduto()">Salvar produto</button>
+        <div id="produtoMsg" class="msg"></div>
+      </div>
+      <div class="card">
+        <h2>Produtos</h2>
+        <p class="sub">Custo só aparece para financeiro/admin (RBAC de campo)</p>
+        <table id="tabelaProdutos">
+          <thead><tr><th>ID</th><th>Nome</th><th>Preço</th><th>Custo</th></tr></thead>
+          <tbody></tbody>
+        </table>
+        <div id="produtosVazio" class="empty" style="display:none">Nenhum produto cadastrado ainda.</div>
+      </div>
+    </div>
+
+    <div class="tab-panel" data-tab="vendas">
+      <div class="card" id="cardLancarVenda">
+        <h2>Lançar venda</h2>
+        <p class="sub">Apenas vendedor e admin</p>
+        <div class="grid-3">
+          <div><label>Produto (id)</label><input id="vendaProdutoId" type="number"></div>
+          <div><label>Cliente (id)</label><input id="vendaClienteId" type="number"></div>
+          <div><label>Quantidade</label><input id="vendaQtd" type="number" value="1"></div>
+        </div>
+        <button class="primary" onclick="lancarVenda()">Lançar venda</button>
+        <div id="vendaMsg" class="msg"></div>
+      </div>
+      <div class="card">
+        <h2>Pedidos</h2>
+        <table id="tabelaPedidos">
+          <thead><tr><th>ID</th><th>Produto</th><th>Cliente</th><th>Vendedor</th><th>Qtd</th><th>Status</th><th></th></tr></thead>
+          <tbody></tbody>
+        </table>
+        <div id="pedidosVazio" class="empty" style="display:none">Nenhum pedido lançado ainda.</div>
+      </div>
+    </div>
+
+    <div class="tab-panel" data-tab="pagamentos">
+      <div class="card">
+        <h2>Pagamentos</h2>
+        <p class="sub">Apenas financeiro e admin</p>
+        <table id="tabelaPagamentos">
+          <thead><tr><th>Venda</th><th>Valor</th><th>Status</th></tr></thead>
+          <tbody></tbody>
+        </table>
+        <div id="pagamentosVazio" class="empty" style="display:none">Nenhum pagamento encontrado.</div>
+      </div>
+    </div>
+
+    <div class="tab-panel" data-tab="usuarios">
+      <div class="card">
+        <h2>Cadastrar funcionário</h2>
+        <p class="sub">Apenas admin cria contas de vendedor ou financeiro</p>
+        <div class="grid-3">
+          <div><label>Usuário</label><input id="novoUsername"></div>
+          <div>
+            <label>Papel</label>
+            <select id="novoPapel">
+              <option value="VENDEDOR">VENDEDOR</option>
+              <option value="FINANCEIRO">FINANCEIRO</option>
+              <option value="ADMIN">ADMIN</option>
+            </select>
+          </div>
+          <div><label>Senha</label><input id="novaSenha" type="password"></div>
+        </div>
+        <button class="primary" onclick="criarFuncionario()">Cadastrar</button>
+        <div id="cadastroFuncMsg" class="msg"></div>
+      </div>
+
+      <div class="card">
+        <h2>Contas do sistema</h2>
+        <table id="tabelaUsuarios">
+          <thead><tr><th>ID</th><th>Usuário</th><th>Papel</th><th>MFA</th><th></th></tr></thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="tab-panel" data-tab="mfa">
+      <div class="card">
+        <h2>Ativar MFA</h2>
+        <p class="sub">Obrigatório para contas ADMIN</p>
+        <button class="secondary" onclick="configurarMfa()">Gerar QR Code</button>
+        <div id="qrContainer" class="qr-box" style="display:none">
+          <img id="qrImg" width="150" height="150">
+          <div>
+            <label>Código do app autenticador</label>
+            <input id="confirmarTotp" maxlength="6">
+            <button class="primary small" onclick="ativarMfa()" style="margin-top:8px">Confirmar e ativar</button>
+          </div>
+        </div>
+        <div id="mfaMsg" class="msg"></div>
+      </div>
+    </div>
+
+  </div>
+
+</main>
+
+<script>
+const API = "http://localhost:8080";
+
+let sessao = { username: null, papel: null, mfaAtivo: false, authHeader: null };
+
+const TABS_POR_PAPEL = {
+  VENDEDOR:   ["inicio", "clientes", "produtos", "vendas"],
+  FINANCEIRO: ["inicio", "clientes", "produtos", "pagamentos"],
+  ADMIN:      ["inicio", "clientes", "produtos", "vendas", "pagamentos", "usuarios", "mfa"]
+};
+const LABELS = {
+  inicio: "Início", clientes: "Clientes", produtos: "Produtos",
+  vendas: "Vendas", pagamentos: "Pagamentos", usuarios: "Usuários", mfa: "MFA"
+};
+
+function mostrarMsg(id, texto, tipo) {
+  const el = document.getElementById(id);
+  el.textContent = texto;
+  el.className = "msg show " + tipo;
+}
+
+async function chamarApi(path, method, body) {
+  const headers = { "Content-Type": "application/json" };
+  if (sessao.authHeader) headers["Authorization"] = sessao.authHeader;
+
+  try {
+    const resp = await fetch(API + path, {
+      method,
+      headers,
+      body: body !== undefined ? JSON.stringify(body) : undefined
+    });
+
+    let data = {};
+    try { data = await resp.json(); } catch (e) {}
+    return { status: resp.status, data };
+  } catch (erroDeRede) {
+    // fetch falha (servidor fora do ar, CORS bloqueado, etc) -- sem isso,
+    // a tela travava sem nenhuma mensagem aparecer
+    return {
+      status: 0,
+      data: { erro: "Não foi possível conectar em " + API + ". O backend está rodando?" }
+    };
+  }
+}
+
+async function fazerLogin() {
+  const username = document.getElementById("loginUsername").value.trim();
+  const senha = document.getElementById("loginSenha").value;
+  const totp = document.getElementById("loginTotp").value.trim();
+
+  const payload = { username, senha };
+  if (totp) payload.codigoTotp = totp;
+
+  const { status, data } = await chamarApi("/login", "POST", payload);
+
+  if (status === 200) {
+    sessao.username = data.username;
+    sessao.papel = data.papel;
+    sessao.mfaAtivo = data.mfaAtivo;
+    sessao.authHeader = "Basic " + btoa(username + ":" + senha);
+    entrarNoApp();
+    return;
+  }
+
+  if (status === 401 && data.mfaRequerido) {
+    document.getElementById("mfaField").style.display = "block";
+    mostrarMsg("loginMsg", "Digite o código do app autenticador.", "err");
+    return;
+  }
+
+  mostrarMsg("loginMsg", data.erro || "Credenciais inválidas.", "err");
+}
+
+function sair() {
+  sessao = { username: null, papel: null, mfaAtivo: false, authHeader: null };
+  document.getElementById("appShell").style.display = "none";
+  document.getElementById("loginCard").style.display = "block";
+  document.getElementById("sessaoInfo").innerHTML = "";
+  document.getElementById("loginSenha").value = "";
+  document.getElementById("loginTotp").value = "";
+  document.getElementById("mfaField").style.display = "none";
+}
+
+function entrarNoApp() {
+  document.getElementById("loginCard").style.display = "none";
+  document.getElementById("appShell").style.display = "block";
+
+  document.getElementById("sessaoInfo").innerHTML =
+    '<b>' + sessao.username + '</b> <span class="badge ' + sessao.papel + '">' + sessao.papel + '</span>' +
+    '<button class="secondary small" onclick="sair()">Sair</button>';
+
+  montarTabs();
+  carregarDadosDaTabAtiva();
+}
+
+function montarTabs() {
+  const nav = document.getElementById("tabs");
+  nav.innerHTML = "";
+  const permitidas = TABS_POR_PAPEL[sessao.papel] || ["inicio"];
+
+  permitidas.forEach((tab, i) => {
+    const btn = document.createElement("button");
+    btn.textContent = LABELS[tab];
+    btn.dataset.tab = tab;
+    if (i === 0) btn.classList.add("active");
+    btn.onclick = () => selecionarTab(tab);
+    nav.appendChild(btn);
+  });
+
+  document.querySelectorAll(".tab-panel").forEach(p => {
+    p.classList.toggle("active", p.dataset.tab === permitidas[0]);
+  });
+}
+
+function selecionarTab(tab) {
+  document.querySelectorAll("#tabs button").forEach(b => b.classList.toggle("active", b.dataset.tab === tab));
+  document.querySelectorAll(".tab-panel").forEach(p => p.classList.toggle("active", p.dataset.tab === tab));
+  carregarDadosDaTab(tab);
+}
+
+function carregarDadosDaTabAtiva() {
+  const ativa = document.querySelector("#tabs button.active");
+  carregarDadosDaTab(ativa ? ativa.dataset.tab : "inicio");
+}
+
+function carregarDadosDaTab(tab) {
+  if (tab === "inicio") carregarMe();
+  if (tab === "clientes") carregarClientes();
+  if (tab === "produtos") { carregarProdutos(); document.getElementById("cardCriarProduto").style.display = sessao.papel === "ADMIN" ? "block" : "none"; }
+  if (tab === "vendas") { carregarPedidos(); document.getElementById("cardLancarVenda").style.display = (sessao.papel === "VENDEDOR" || sessao.papel === "ADMIN") ? "block" : "none"; }
+  if (tab === "pagamentos") carregarPagamentos();
+  if (tab === "usuarios") carregarUsuarios();
+}
+
+async function carregarMe() {
+  const { status, data } = await chamarApi("/me", "GET");
+  const el = document.getElementById("meuPerfil");
+  if (status !== 200) { el.textContent = "Não foi possível carregar o perfil."; return; }
+  el.innerHTML =
+    '<p><b>Usuário:</b> ' + data.username + '</p>' +
+    '<p><b>Papel:</b> <span class="badge ' + data.papel + '">' + data.papel + '</span></p>' +
+    '<p><b>MFA ativo:</b> ' + (data.mfaAtivo ? "sim" : "não") + '</p>';
+}
+
+async function criarCliente() {
+  const body = {
+    nome: document.getElementById("clienteNome").value.trim(),
+    cpf: document.getElementById("clienteCpf").value.trim(),
+    cep: document.getElementById("clienteCep").value.trim()
+  };
+  const { status, data } = await chamarApi("/clientes", "POST", body);
+  if (status === 201) {
+    mostrarMsg("clienteMsg", "Cliente cadastrado.", "ok");
+    ["clienteNome","clienteCpf","clienteCep"].forEach(id => document.getElementById(id).value = "");
+    carregarClientes();
+  } else {
+    mostrarMsg("clienteMsg", data.erro || "Erro ao cadastrar cliente.", "err");
+  }
+}
+
+async function carregarClientes() {
+  const { status, data } = await chamarApi("/clientes", "GET");
+  const corpo = document.querySelector("#tabelaClientes tbody");
+  corpo.innerHTML = "";
+  if (status !== 200 || !data.length) {
+    document.getElementById("clientesVazio").style.display = "block";
+    return;
+  }
+  document.getElementById("clientesVazio").style.display = "none";
+  data.forEach(c => {
+    corpo.innerHTML += '<tr><td>' + c.id + '</td><td>' + c.nome + '</td><td>' + c.cpf + '</td><td>' + c.cep + '</td></tr>';
+  });
+}
+
+async function criarProduto() {
+  const body = {
+    nome: document.getElementById("produtoNome").value.trim(),
+    precoVenda: Number(document.getElementById("produtoPreco").value),
+    custo: Number(document.getElementById("produtoCusto").value)
+  };
+  const { status, data } = await chamarApi("/produtos", "POST", body);
+  if (status === 201) {
+    mostrarMsg("produtoMsg", "Produto cadastrado.", "ok");
+    ["produtoNome","produtoPreco","produtoCusto"].forEach(id => document.getElementById(id).value = "");
+    carregarProdutos();
+  } else {
+    mostrarMsg("produtoMsg", data.erro || "Erro ao cadastrar produto.", "err");
+  }
+}
+
+async function carregarProdutos() {
+  const { status, data } = await chamarApi("/produtos", "GET");
+  const corpo = document.querySelector("#tabelaProdutos tbody");
+  corpo.innerHTML = "";
+  if (status !== 200 || !data.length) {
+    document.getElementById("produtosVazio").style.display = "block";
+    return;
+  }
+  document.getElementById("produtosVazio").style.display = "none";
+  data.forEach(p => {
+    const custo = (p.custo === null || p.custo === undefined) ? "—" : p.custo;
+    corpo.innerHTML += '<tr><td>' + p.id + '</td><td>' + p.nome + '</td><td>' + p.precoVenda + '</td><td>' + custo + '</td></tr>';
+  });
+}
+
+async function lancarVenda() {
+  const body = {
+    produtoId: Number(document.getElementById("vendaProdutoId").value),
+    clienteId: Number(document.getElementById("vendaClienteId").value),
+    quantidade: Number(document.getElementById("vendaQtd").value)
+  };
+  const { status, data } = await chamarApi("/vendas", "POST", body);
+  if (status === 201) {
+    mostrarMsg("vendaMsg", "Venda lançada.", "ok");
+    carregarPedidos();
+  } else if (status === 403) {
+    mostrarMsg("vendaMsg", "Seu papel não tem permissão para lançar vendas.", "err");
+  } else {
+    mostrarMsg("vendaMsg", data.erro || "Erro ao lançar venda.", "err");
+  }
+}
+
+async function carregarPedidos() {
+  const { status, data } = await chamarApi("/pedidos", "GET");
+  const corpo = document.querySelector("#tabelaPedidos tbody");
+  corpo.innerHTML = "";
+  if (status !== 200 || !data.length) {
+    document.getElementById("pedidosVazio").style.display = "block";
+    return;
+  }
+  document.getElementById("pedidosVazio").style.display = "none";
+
+  const podeAtualizar = sessao.papel === "VENDEDOR" || sessao.papel === "ADMIN";
+  const statusOpcoes = ["PENDENTE", "ENVIADO", "ENTREGUE", "CANCELADO"];
+
+  data.forEach(v => {
+    let acao = "";
+    if (podeAtualizar) {
+      acao = '<select onchange="atualizarStatus(' + v.id + ', this.value)">' +
+        statusOpcoes.map(s => '<option value="' + s + '"' + (s === v.status ? " selected" : "") + '>' + s + '</option>').join("") +
+        '</select>';
+    }
+    corpo.innerHTML += '<tr><td>' + v.id + '</td><td>' + v.produtoNome + '</td><td>' + v.clienteNome + '</td>' +
+      '<td>' + v.vendedorUsername + '</td><td>' + v.quantidade + '</td>' +
+      '<td><span class="badge ' + v.status + '">' + v.status + '</span></td>' +
+      '<td>' + acao + '</td></tr>';
+  });
+}
+
+async function atualizarStatus(id, novoStatus) {
+  const { status, data } = await chamarApi("/pedidos/" + id + "/status", "PUT", { status: novoStatus });
+  if (status === 200) {
+    carregarPedidos();
+  } else {
+    mostrarMsg("vendaMsg", data.erro || "Erro ao atualizar status.", "err");
+  }
+}
+
+async function carregarPagamentos() {
+  const { status, data } = await chamarApi("/pagamentos", "GET");
+  const corpo = document.querySelector("#tabelaPagamentos tbody");
+  corpo.innerHTML = "";
+  if (status === 403) {
+    document.getElementById("pagamentosVazio").textContent = "Acesso negado para o seu papel.";
+    document.getElementById("pagamentosVazio").style.display = "block";
+    return;
+  }
+  if (status !== 200 || !data.length) {
+    document.getElementById("pagamentosVazio").textContent = "Nenhum pagamento encontrado.";
+    document.getElementById("pagamentosVazio").style.display = "block";
+    return;
+  }
+  document.getElementById("pagamentosVazio").style.display = "none";
+  data.forEach(p => {
+    corpo.innerHTML += '<tr><td>' + p.vendaId + '</td><td>' + p.valor + '</td><td><span class="badge ' + p.status + '">' + p.status + '</span></td></tr>';
+  });
+}
+
+async function criarFuncionario() {
+  const body = {
+    username: document.getElementById("novoUsername").value.trim(),
+    senha: document.getElementById("novaSenha").value,
+    papel: document.getElementById("novoPapel").value
+  };
+  const { status, data } = await chamarApi("/cadastro", "POST", body);
+  if (status === 201) {
+    mostrarMsg("cadastroFuncMsg", "Funcionário cadastrado.", "ok");
+    ["novoUsername","novaSenha"].forEach(id => document.getElementById(id).value = "");
+    carregarUsuarios();
+  } else {
+    mostrarMsg("cadastroFuncMsg", data.erro || "Não foi possível cadastrar.", "err");
+  }
+}
+
+async function carregarUsuarios() {
+  const { status, data } = await chamarApi("/usuarios", "GET");
+  const corpo = document.querySelector("#tabelaUsuarios tbody");
+  corpo.innerHTML = "";
+  if (status !== 200) return;
+  data.forEach(u => {
+    corpo.innerHTML += '<tr><td>' + u.id + '</td><td>' + u.username + '</td>' +
+      '<td><span class="badge ' + u.papel + '">' + u.papel + '</span></td>' +
+      '<td>' + (u.mfaAtivo ? "sim" : "não") + '</td>' +
+      '<td><button class="secondary small" onclick="desbloquearUsuario(' + u.id + ')">Desbloquear</button></td></tr>';
+  });
+}
+
+async function desbloquearUsuario(id) {
+  await chamarApi("/usuarios/" + id + "/desbloquear", "PUT");
+  carregarUsuarios();
+}
+
+async function configurarMfa() {
+  const { status, data } = await chamarApi("/mfa/setup", "POST");
+  if (status === 200) {
+    document.getElementById("qrImg").src = "data:image/png;base64," + data.qrCodeBase64;
+    document.getElementById("qrContainer").style.display = "flex";
+  } else {
+    mostrarMsg("mfaMsg", data.erro || "Erro ao gerar MFA.", "err");
+  }
+}
+
+async function ativarMfa() {
+  const codigo = document.getElementById("confirmarTotp").value.trim();
+  const { status, data } = await chamarApi("/mfa/ativar", "POST", { codigoTotp: codigo });
+  if (status === 200) {
+    mostrarMsg("mfaMsg", "MFA ativado com sucesso.", "ok");
+  } else {
+    mostrarMsg("mfaMsg", data.erro || "Código inválido.", "err");
+  }
+}
+</script>
+
+</body>
+</html>
